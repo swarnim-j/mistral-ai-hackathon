@@ -50,7 +50,7 @@ export default function Home() {
           <InputForm onSubmit={handleWebsiteGeneration} isLoading={isLoading} />
         </div>
         <div className="lg:w-2/3 flex-grow overflow-hidden">
-          <div className="h-[600px] lg:h-[700px]">
+          <div className="h-[500px] lg:h-[600px]"> {/* Reduced height here */}
             <WebsitePreview website={generatedWebsite} error={error} />
           </div>
         </div>
