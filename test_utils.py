@@ -61,7 +61,7 @@ def _encode_image(image_path: str) -> str:
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
-def generate_website_theme(event_details: str, image_dir: str = "../images", html_structure: List[str] = ["index.html","contact.html","register.html","about.html"]) -> Dict[str, str]:
+def generate_website_theme(event_details: str, image_dir: str = "./images", html_structure: List[str] = ["index.html","contact.html","register.html","about.html"]) -> Dict[str, str]:
     reference_images = _list_file_names(image_dir)[:7]
     image_paths = [f"{image_dir}/{image_name}" for image_name in reference_images]
     images = [{"type": "image_url", "image_url": f"data:image/jpeg;base64,{_encode_image(path)}"} for path in image_paths]
