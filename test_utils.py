@@ -386,7 +386,7 @@ def generate_website(user_input: str) -> dict:
         pages = generate_pages(website_theme, event_details, [])  # Pass an empty list for now
         print("Step 4: Pages generated")
         
-        refined_pages = refine_pages(pages, website_theme)
+        refined_pages = pages # refine_pages(pages, website_theme)
         print("Step 5: Pages refined")
         
         # Generate and save event-related images
