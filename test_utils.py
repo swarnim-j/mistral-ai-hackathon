@@ -15,8 +15,7 @@ from jinja2 import Environment, FileSystemLoader
 api_key = os.environ.get("MISTRAL_API_KEY")
 if not api_key:
     raise ValueError("MISTRAL_API_KEY environment variable is not set")
-client = Mistral(api_key=api_key)
-
+client = 
 MODELS = {
     "text": "mistral-large-latest",
     "image": "pixtral-12b-2409",
@@ -446,7 +445,7 @@ def generate_page_content(website_theme: Dict[str, str], page: str, event_detail
     - Use the provided CSS to style the page consistently with the overall theme.
     - Make sure all internal links use relative paths (e.g., './page_name.html').
 
-    Provide your response as a complete HTML file, including the DOCTYPE, html, head, and body tags. Embed the CSS directly in a style tag within the head.
+    Provide your response as a complete HTML file, including the DOCTYPE, html, head, and body tags. Embed the CSS directly in a style tag within the head. Do not include any other text, such as comments or additional tags.
     """
 
     messages = [
@@ -474,11 +473,9 @@ def refine_pages(pages: List[Dict[str, str]], website_theme: Dict[str, str]):
         css_theme=website_theme.get("css", "")
     )
     messages = [
-        {"role": "system", "content": "You are an expert web developer tasked with refining and improving web pages. For each file, provide the filename, content, and any additional notes or explanations. Use [FILE] to start a file section, [CONTENT] for the file content, and [NOTES] for any additional information. For each file, provide your response as a complete HTML file, including the DOCTYPE, html, head, and body tags. Embed the CSS directly in a style tag within the head. Do not include any other text, such as comments or additional tags. Do not create any seperate CSS file, but embed the CSS directly in each HTML file."},
+        {"role": "system", "content": "You are an expert web developer tasked with refining and improving web pages. For each file, provide the filename, content, and any additional notes or explanations. Use [FILE] to start a file section, [CONTENT] for the file content, and [NOTES] for any additional information."},
         {"role": "user", "content": rendered_content}
     ]
-
-    print(messages)
 
     response = client.chat.complete(
         model=MODELS["text"],
@@ -494,14 +491,12 @@ def refine_pages(pages: List[Dict[str, str]], website_theme: Dict[str, str]):
         if file_match:
             filename = file_match.group(1).strip()
             file_content = file_match.group(2).strip()
-            file_content = file_content.replace("```html","").replace("```css","").replace("```","")
             notes = file_match.group(3).strip()
             refined_pages.append({
                 "name": filename,
                 "content": file_content,
                 "notes": notes
             })
-
     return refined_pages
 def generate_images(event_details: str, num_images: int = 5):
     template_dir = os.path.join(os.path.dirname(__file__), "prompts")
@@ -538,31 +533,13 @@ def generate_website(user_input: str) -> dict:
         clear_directory('screenshots')
         clear_directory('images')
         event_details = generate_event_details(user_input)
-        print("Step 1: Event details generated")
-        
-        reference_images = get_reference_images(user_input)[:3]
-        print("Step 2: Reference images retrieved")
-        
-        website_theme = generate_website_theme(event_details, reference_images=reference_images)
-        print("Step 3: Website theme generated")
-        
-        pages = generate_pages(website_theme, event_details, [])  # Pass an empty list for now
-        print("Step 4: Pages generated")
-        
-        refined_pages = pages # refine_pages(pages, website_theme)
-        print("Step 5: Pages refined")
-        
-        # Generate and save event-related images
-        event_images = generate_images(event_details)
-        print(f"Step 6: Event images generated and saved: {event_images}")
-        
-        # Update refined pages with the new event images
-        updated_refined_pages = update_pages_with_images(refined_pages, event_images)
-        print("Step 7: Pages updated with new images")
-        
+        website_theme = generate_website_theme(event_details)
+        pages = generate_pages(website_theme, event_details, [])
+        update_refined_pages = refine_pages(pages, website_theme)
+        generate_images(event_details=event_details)
         return {
             "theme": website_theme,
-            "pages": updated_refined_pages
+            "pages": update_refined_pages
         }
     except Exception as e:
         return {
