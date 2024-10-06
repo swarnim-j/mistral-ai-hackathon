@@ -339,11 +339,36 @@ def refine_pages(pages: List[Dict[str, str]], website_theme: Dict[str, str]):
                 "content": file_content,
                 "notes": notes
             })
-
     return refined_pages
-def generate_images(pages: dict[str, str]):
-    pages = [page['content'] for page in pages]
+def generate_images(event_details: str, num_images: int = 5):
+    template_dir = os.path.join(os.path.dirname(__file__), "prompts")
+    env = Environment(loader=FileSystemLoader(template_dir))
+    template = env.get_template("get_event_images.xml.jinja")
+
+    rendered_content = template.render(event_details=event_details)
+
+    query_messages = [
+        {"role": "system", "content": "You are a creative web designer assistant."},
+        {"role": "user", "content": rendered_content},
+    ]
+    searchTooling = SearchTooling(prompt=event_details)
+    query_response = client.chat.complete(
+        model=MODELS["text"],
+        messages=query_messages,
+        tools=searchTooling.image_search_tool,
+        tool_choice="required",
+    )
+
+    tool_calls = query_response.choices[0].message.tool_calls
+    function_name = "search_web_pictures"
+    saved_images = []
     
+    for i, call in enumerate(tool_calls[:num_images]):
+        function_params = json.loads(call.function.arguments)
+        searchTooling.function_names[function_name](**function_params)
+
+
+    return saved_images
 
 def generate_website(user_input: str) -> dict:
     try:
@@ -353,31 +378,48 @@ def generate_website(user_input: str) -> dict:
         print("Step 1: Event details generated")
         
         reference_images = get_reference_images(user_input)[:8]
-
         print("Step 2: Reference images retrieved")
-        # Create a random.txt file
-        with open('random.txt', 'w') as f:
-            f.write('This is a randomly generated file.')
-        print("Random file created: random.txt")
         
         website_theme = generate_website_theme(event_details, reference_images=reference_images)
         print("Step 3: Website theme generated")
         
-        pages = generate_pages(website_theme, event_details, [])
+        pages = generate_pages(website_theme, event_details, [])  # Pass an empty list for now
         print("Step 4: Pages generated")
         
         refined_pages = refine_pages(pages, website_theme)
         print("Step 5: Pages refined")
         
+        # Generate and save event-related images
+        event_images = generate_images(event_details)
+        print(f"Step 6: Event images generated and saved: {event_images}")
+        
+        # Update refined pages with the new event images
+        updated_refined_pages = update_pages_with_images(refined_pages, event_images)
+        print("Step 7: Pages updated with new images")
+        
         return {
             "theme": website_theme,
-            "pages": refined_pages
+            "pages": updated_refined_pages
         }
     except Exception as e:
         return {
             "error": str(e),
             "traceback": traceback.format_exc()
         }
+
+def update_pages_with_images(pages: List[Dict[str, str]], images: List[str]) -> List[Dict[str, str]]:
+    updated_pages = []
+    for page in pages:
+        content = page['content']
+        for image in images:
+            # Replace placeholder images or add new images where appropriate
+            content = content.replace('images/placeholder.jpg', f'images/{image}', 1)
+        updated_pages.append({
+            "name": page['name'],
+            "content": content,
+            "notes": page.get('notes', '')
+        })
+    return updated_pages
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

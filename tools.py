@@ -70,11 +70,14 @@ class SearchTooling:
                     },
                 },
             },
+        ]
+
+        self.image_search_tool = [
             {
                 "type": "function",
                 "function": {
                     "name": "search_web_pictures",
-                    "description": "Search for images on the web based on a query and save them to a directory",
+                    "description": "Search for images on the web based on a query and save them with a specific filename",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -82,15 +85,22 @@ class SearchTooling:
                                 "type": "string",
                                 "description": "The search query for images.",
                             },
+                            "filename": {
+                                "type": "string",
+                                "description": "The filename to save the image as.",
+                            },
                             "save_dir": {
                                 "type": "string",
                                 "description": "The directory to save the downloaded images. Defaults to 'images'.",
                             },
                         },
-                        "required": ["query"],
+                        "required": ["query", "filename"],
                     },
                 },
             },
+        ]
+
+        self.screenshot_tool = [
             {
                 "type": "function",
                 "function": {
@@ -116,9 +126,7 @@ class SearchTooling:
 
         self.function_names = {
             "search_web_information": self.search_web_information,
-            "search_web_pictures": functools.partial(
-                self.search_web_pictures, save_dir="images"
-            ),
+            "search_web_pictures": self.search_web_pictures,
             "screenshot_web": functools.partial(
                 self.screenshot_web, save_dir="screenshots"
             ),
@@ -200,49 +208,49 @@ class SearchTooling:
             print(f"Error in filter_images: {e}")
             return False
 
-    async def search_web_pictures(self) -> List[Dict[str, Any]]:
+    def search_web_pictures(self, query: str, filename: str, save_dir: str = "images") -> Dict[str, Any]:
         """
-        Search for images using the Brave API's image search endpoint and save them to a directory.
+        Search for an image using the Brave API's image search endpoint and save it with the specified filename.
 
         Args:
         - query (str): The search query for images.
-        - save_dir (str): The directory to save the downloaded images. Defaults to 'images'.
+        - filename (str): The filename to save the image as.
+        - save_dir (str): The directory to save the downloaded image. Defaults to 'images'.
 
         Returns:
-        - List[Dict[str, Any]]: A list of image results with local file paths.
+        - Dict[str, Any]: A dictionary with the local file path of the saved image.
         """
-        # Get the current working directory and append the save_dir
         save_dir = os.path.join(os.getcwd(), save_dir.lstrip("/"))
         headers = {"Accept": "application/json", "X-Subscription-Token": self.api_key}
-        params = {"q": query, "count": 2}  # Number of results to return
+        params = {"q": query, "count": 1}  # We only need one result
         response = requests.get(self.image_search_url, headers=headers, params=params)
 
         if response.status_code == 200:
             data = response.json()
             results = data.get("results", [])
 
-            # Create the save directory if it doesn't exist
-            Path(save_dir).mkdir(parents=True, exist_ok=True)
-
-            for i, result in enumerate(results):
-                image_url = result.get("image", {}).get("url")
+            if results:
+                image_url = results[0].get("image", {}).get("url")
                 if image_url:
                     try:
                         image_response = requests.get(image_url)
                         if image_response.status_code == 200:
-                            file_extension = image_url.split(".")[-1].split("?")[0]
-                            file_name = f"image_{i}.{file_extension}"
-                            file_path = os.path.join(save_dir, file_name)
+                            # Ensure the save directory exists
+                            Path(save_dir).mkdir(parents=True, exist_ok=True)
+                            
+                            # Use the provided filename, but ensure it has an extension
+                            file_extension = os.path.splitext(image_url)[1] or '.jpg'
+                            safe_filename = f"{filename}{file_extension}"
+                            file_path = os.path.join(save_dir, safe_filename)
+                            
                             with open(file_path, "wb") as f:
                                 f.write(image_response.content)
-                            result["local_path"] = file_path
+                            return {"local_path": file_path}
                     except Exception as e:
-                        print(f"Error downloading image {i}: {e}")
+                        print(f"Error downloading image: {e}")
 
-            return results
-        else:
-            print(f"Error: {response.status_code} - {response.text}")
-            return []
+        print(f"Error: {response.status_code} - {response.text}")
+        return {}
 
     def _capture_screenshot(self, url: str, save_dir: str) -> str:
         try:
