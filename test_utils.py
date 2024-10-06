@@ -7,7 +7,7 @@ import re
 import json
 from typing import List, Dict
 import traceback
-
+from jinja2 import Environment, FileSystemLoader
 api_key = os.getenv("MISTRAL_API_KEY")
 client = Mistral(api_key=api_key)
 
@@ -137,9 +137,11 @@ def generate_website_theme(event_details: str, image_dir: str = "./images", html
         <header class="header">
             <div class="logo">{event_name}</div>
             <nav>
-                <a href="#about">About</a>
-                <a href="#schedule">Schedule</a>
-                <a href="#register">Register</a>
+                <a href="index.html">Home</a>
+                <a href="about.html">About</a>
+                <a href="schedules.html">Schedule</a>
+                <a href="register.html">Register</a>
+                <a href="contact.html">Register</a>
             </nav>
         </header>
         <main class="main-content">
@@ -251,16 +253,53 @@ def generate_page_content(website_theme: Dict[str, str], page: str, event_detail
 
     return html_content
 
+def refine_pages(pages: List[Dict[str, str]], website_theme: Dict[str, str]):
+    template_dir = os.path.join(os.path.dirname(__file__), "prompts")
+    env = Environment(loader=FileSystemLoader(template_dir))
+    template = env.get_template("refine_website.xml.jinja")
+
+    rendered_content = template.render(
+        pages=pages,
+        html_theme=website_theme.get("html", ""),
+        css_theme=website_theme.get("css", "")
+    )
+    messages = [
+        {"role": "system", "content": "You are an expert web developer tasked with refining and improving web pages. For each file, provide the filename, content, and any additional notes or explanations. Use [FILE] to start a file section, [CONTENT] for the file content, and [NOTES] for any additional information."},
+        {"role": "user", "content": rendered_content}
+    ]
+
+    response = client.chat.complete(
+        model=MODELS["text"],
+        messages=messages
+    )
+
+    refined_pages = []
+    content = response.choices[0].message.content
+    file_sections = re.split(r'\[FILE\]', content)[1:]  # Skip the first empty split
+    
+    for section in file_sections:
+        file_match = re.search(r'(.*?)\[CONTENT\](.*?)\[NOTES\](.*)', section, re.DOTALL)
+        if file_match:
+            filename = file_match.group(1).strip()
+            file_content = file_match.group(2).strip()
+            notes = file_match.group(3).strip()
+            refined_pages.append({
+                "name": filename,
+                "content": file_content,
+                "notes": notes
+            })
+
+    return refined_pages
 
 def generate_website(user_input: str) -> dict:
     try:
         event_details = generate_event_details(user_input)
         website_theme = generate_website_theme(event_details)
         pages = generate_pages(website_theme, event_details, [])
-        
+        refined_pages = refine_pages(pages, website_theme)
         return {
             "theme": website_theme,
-            "pages": pages
+            "pages": refined_pages
         }
     except Exception as e:
         return {
