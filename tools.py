@@ -142,7 +142,7 @@ class SearchTooling:
         # Query parameters
         params = {
             "q": query,
-            "count": 10,
+            "count": 2,
             "result_filter": "web",
         }  # Number of results to return
 

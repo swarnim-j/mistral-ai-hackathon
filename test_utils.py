@@ -91,8 +91,9 @@ def get_reference_images(event_details):
     for call in tool_calls:
         function_params = json.loads(call.function.arguments)
         print(function_params)
-        image_queries.append(function_params["query"])[:5]
+        image_queries.append(function_params["query"])
 
+    image_queries = image_queries[:min(len(image_queries), 5)]
     for query in image_queries:
         searchTooling.function_names[function_name](query)
 
@@ -307,7 +308,7 @@ def refine_pages(pages: List[Dict[str, str]], website_theme: Dict[str, str]):
     template_dir = os.path.join(os.path.dirname(__file__), "prompts")
     env = Environment(loader=FileSystemLoader(template_dir))
     template = env.get_template("refine_website.xml.jinja")
-    
+
     rendered_content = template.render(
         pages=pages,
         html_theme=website_theme.get("html", ""),
@@ -340,14 +341,33 @@ def refine_pages(pages: List[Dict[str, str]], website_theme: Dict[str, str]):
             })
 
     return refined_pages
+def generate_images(pages: dict[str, str]):
+    pages = [page['content'] for page in pages]
+    
 
 def generate_website(user_input: str) -> dict:
     try:
+        clear_directory('screenshots')
+        clear_directory('images')
         event_details = generate_event_details(user_input)
+        print("Step 1: Event details generated")
+        
         reference_images = get_reference_images(user_input)[:8]
+
+        print("Step 2: Reference images retrieved")
+        # Create a random.txt file
+        with open('random.txt', 'w') as f:
+            f.write('This is a randomly generated file.')
+        print("Random file created: random.txt")
+        
         website_theme = generate_website_theme(event_details, reference_images=reference_images)
+        print("Step 3: Website theme generated")
+        
         pages = generate_pages(website_theme, event_details, [])
+        print("Step 4: Pages generated")
+        
         refined_pages = refine_pages(pages, website_theme)
+        print("Step 5: Pages refined")
         
         return {
             "theme": website_theme,

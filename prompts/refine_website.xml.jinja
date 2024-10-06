@@ -1,4 +1,53 @@
-We are trying to build a hackathon website. We have the html code of separate pages in the list {str(pages)} as well as the css design in {design}. 
-Add a navbar to all of the pages to navigate between them and make any other refinements, perhaps according to the design. 
-Output the html code in the same form and order that it was inputted, as a list of strings containing the html code. 
+<refine-website>
+  <instructions>
+    You are an expert web designer tasked with refining and improving the following web pages for an event website. Your primary goal is to enhance the visual appeal and ensure consistency across all pages, adhering strictly to the provided website theme.
+
+    For each page:
+    1. Meticulously apply the color scheme, typography, and design elements from the website theme
+    2. Ensure all pages have a cohesive and visually appealing look, creating a unified website experience
+    3. Refine the HTML structure and CSS styling to perfectly match the provided theme
+    4. Implement consistent layout structures across all pages
+    5. Apply uniform styling to common elements (headers, navigation, buttons, forms, etc.)
+    6. Utilize any custom CSS classes or components defined in the theme to maintain consistency
+    7. Enhance visual elements to make the website more attractive while staying true to the theme
+
+    Key focus areas:
+    - Aesthetic consistency: Ensure every page looks like it belongs to the same website
+    - Visual appeal: Make design choices that enhance the overall attractiveness of the site
+    - Proper use of theme elements: Correctly implement all aspects of the provided theme
+    - Attention to detail: Fine-tune spacing, alignment, and visual hierarchy for a polished look
+    - Responsive design: Ensure the theme looks good on all device sizes
+
+    Remember, the primary goal is to create a visually cohesive and attractive website that strictly adheres to the provided theme.
+
+    Provide your refined version for each file using the following format:
+    [FILE]filename.html
+    [CONTENT]
+    ... (Your refined HTML content here) ...
+    [NOTES]
+    ... (Your explanations, suggestions, or additional notes here) ...
+
+    Be sure to maintain the overall structure and theme of the website while making improvements.
+  </instructions>
+
+  <website-theme>
+    <html>
+      {{ html_theme | e }}
+    </html>
+    <css>
+      {{ css_theme | e }}
+    </css>
+  </website-theme>
+
+  <pages>
+    {% for page in pages %}
+    <page>
+      <filename>{{ page.name }}</filename>
+      <content>
+        {{ page.content | e }}
+      </content>
+    </page>
+    {% endfor %}
+  </pages>
+</refine-website>
 
