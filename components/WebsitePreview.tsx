@@ -10,56 +10,67 @@ const WebsitePreview: React.FC<WebsitePreviewProps> = ({ website, error }) => {
 
   if (error) {
     return (
-      <div className="glass-morphism p-6">
-        <h2 className="text-xl font-semibold mb-4 gradient-text">Website Preview</h2>
-        <p className="text-red-500">Error: {error}</p>
+      <div className="glass-morphism p-4 h-full flex flex-col">
+        <h2 className="text-2xl font-bold mb-4">Website Preview</h2>
+        <p className="text-red-400 flex-grow">Error: {error}</p>
       </div>
     )
   }
 
   if (!website || !website.pages || website.pages.length === 0) {
     return (
-      <div className="glass-morphism p-6">
-        <h2 className="text-xl font-semibold mb-4 gradient-text">Website Preview</h2>
-        <p className="text-gray-400">No website generated yet.</p>
+      <div className="glass-morphism p-4 h-full flex flex-col">
+        <h2 className="text-2xl font-bold mb-4">Website Preview</h2>
+        <p className="text-gray-400 flex-grow">No website generated yet.</p>
       </div>
     )
   }
 
   const { theme, pages } = website
 
+  const getDisplayName = (pageName: string) => {
+    if (pageName === 'index.html') return 'Home'
+    return pageName.replace('.html', '').charAt(0).toUpperCase() + pageName.replace('.html', '').slice(1)
+  }
+
   return (
-    <div className="glass-morphism p-6">
-      <h2 className="text-xl font-semibold mb-4 gradient-text">Website Preview</h2>
-      <div className="mb-4">
-        <select
-          className="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-md focus:ring-2 focus:ring-primary-color outline-none transition-all duration-300"
-          value={selectedPage}
-          onChange={(e) => setSelectedPage(Number(e.target.value))}
-        >
-          {pages.map((page: any, index: number) => (
-            <option key={index} value={index}>
-              {page.name}
-            </option>
-          ))}
-        </select>
+    <div className="glass-morphism p-4 h-full flex flex-col">
+      <h2 className="text-2xl font-bold mb-4">Website Preview</h2>
+      <div className="mb-4 flex flex-wrap gap-2">
+        {pages.map((page: any, index: number) => (
+          <button
+            key={index}
+            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+              selectedPage === index
+                ? 'bg-white bg-opacity-10 text-white'
+                : 'text-gray-400 hover:text-white'
+            }`}
+            onClick={() => setSelectedPage(index)}
+          >
+            {getDisplayName(page.name)}
+          </button>
+        ))}
       </div>
-      <div className="border border-gray-700 rounded-md p-4 h-[600px] overflow-auto bg-white">
+      <div className="flex-grow bg-white rounded-lg overflow-hidden">
         {pages[selectedPage] && pages[selectedPage].content ? (
           <iframe
             srcDoc={`
               <html>
                 <head>
                   <style>${theme.css}</style>
+                  <style>
+                    body { margin: 0; padding: 0; height: 100vh; overflow: auto; }
+                    * { box-sizing: border-box; }
+                  </style>
                 </head>
                 <body>${pages[selectedPage].content}</body>
               </html>
             `}
-            className="w-full h-full"
-            title={`Generated ${pages[selectedPage].name}`}
+            className="w-full h-full border-0"
+            title={`Generated ${getDisplayName(pages[selectedPage].name)}`}
           />
         ) : (
-          <p className="text-gray-500">No content available for this page.</p>
+          <p className="text-gray-500 p-4">No content available for this page.</p>
         )}
       </div>
     </div>

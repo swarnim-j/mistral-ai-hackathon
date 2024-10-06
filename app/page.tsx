@@ -38,12 +38,20 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="flex flex-col min-h-screen bg-[rgb(var(--background-rgb))]">
       <Header />
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <main className="flex-grow container mx-auto px-4 py-8 flex flex-col lg:flex-row">
+        <div className="lg:w-1/3 lg:pr-8 mb-8 lg:mb-0">
+          <h2 className="text-4xl font-bold mb-6 leading-tight">
+            <span className="gradient-text">Elevate</span> Your Web <span className="gradient-text">Presence</span>
+          </h2>
+          <p className="text-xl mb-8 text-gray-300">Create stunning websites with AI in seconds.</p>
           <InputForm onSubmit={handleWebsiteGeneration} isLoading={isLoading} />
-          <WebsitePreview website={generatedWebsite} error={error} />
+        </div>
+        <div className="lg:w-2/3 flex-grow overflow-hidden">
+          <div className="h-[600px] lg:h-[700px]">
+            <WebsitePreview website={generatedWebsite} error={error} />
+          </div>
         </div>
       </main>
     </div>
