@@ -17,15 +17,7 @@ MODELS = {
     "code": "codestral-mamba-latest",
 }
 
-def init_mistral_client():
-    api_key = os.getenv("MISTRAL_API_KEY")
-    if not api_key:
-        raise ValueError("MISTRAL_API_KEY environment variable is not set")
-    return Mistral(api_key=api_key)
-
 def generate_event_details(user_input: str) -> str:
-    client = init_mistral_client()
-    
     prompt = f"""
     You are an AI assistant helping to create a website for an event based on a user's input. The input might be vague or minimal. Your task is to expand on this input and provide rich context for website generation.
 
@@ -155,7 +147,9 @@ def generate_page_content(website_theme: Dict[str, str], page: str, event_detail
         messages=messages
     )
 
-    return response.choices[0].message.content
+    html_content = response.choices[0].message.content.replace("```html", "").replace("```", "")
+
+    return html_content
 
 
 def generate_website(user_input: str) -> dict:
