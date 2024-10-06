@@ -7,8 +7,14 @@ import re
 import json
 from typing import List, Dict
 import traceback
+import asyncio
 from jinja2 import Environment, FileSystemLoader
-api_key = os.getenv("MISTRAL_API_KEY")
+from tools import SearchTooling, _encode_image
+import shutil
+from jinja2 import Environment, FileSystemLoader
+api_key = os.environ.get("MISTRAL_API_KEY")
+if not api_key:
+    raise ValueError("MISTRAL_API_KEY environment variable is not set")
 client = Mistral(api_key=api_key)
 
 MODELS = {
@@ -16,6 +22,21 @@ MODELS = {
     "image": "pixtral-12b-2409",
     "code": "codestral-mamba-latest",
 }
+
+def clear_directory(directory_path):
+    try:
+        if os.path.exists(directory_path):
+            for item in os.listdir(directory_path):
+                item_path = os.path.join(directory_path, item)
+                if os.path.isfile(item_path):
+                    os.unlink(item_path)
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+            print(f"Directory '{directory_path}' has been cleared.")
+        else:
+            print(f"Directory '{directory_path}' does not exist.")
+    except Exception as e:
+        print(f"An error occurred while clearing the directory: {e}")
 
 def generate_event_details(user_input: str) -> str:
     prompt = f"""
@@ -38,24 +59,55 @@ def generate_event_details(user_input: str) -> str:
     ]
 
     try:
-        response = client.chat.complete(
-            model=MODELS["text"],
-            messages=messages
-        )
+        response = client.chat.complete(model=MODELS["text"], messages=messages)
         return response.choices[0].message.content
     except SDKError as e:
         raise RuntimeError(f"Mistral API error: {str(e)}")
 
 def _list_file_names(directory: str) -> List[str]:
     return os.listdir(directory)
+def get_reference_images(event_details):
+    template_dir = os.path.join(os.path.dirname(__file__), "prompts")
+    env = Environment(loader=FileSystemLoader(template_dir))
+    template = env.get_template("get_reference_images.xml.jinja")
 
-def _encode_image(image_path: str) -> str:
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
+    rendered_content = template.render(event_details=event_details)
 
-def generate_website_theme(event_details: str, image_dir: str = "./images", html_structure: List[str] = ["index.html","contact.html","register.html","about.html"]) -> Dict[str, str]:
-    reference_images = _list_file_names(image_dir)[:7]
-    image_paths = [f"{image_dir}/{image_name}" for image_name in reference_images]
+    query_messages = [
+        {"role": "system", "content": "You are a creative web designer assistant."},
+        {"role": "user", "content": rendered_content},
+    ]
+    searchTooling = SearchTooling(prompt=event_details)
+    query_response = client.chat.complete(
+        model=MODELS["text"],
+        messages=query_messages,
+        tools=searchTooling.tools,
+        tool_choice="required",
+    )
+
+    tool_calls = query_response.choices[0].message.tool_calls
+    function_name = "screenshot_web"
+    image_queries = []
+    for call in tool_calls:
+        function_params = json.loads(call.function.arguments)
+        print(function_params)
+        image_queries.append(function_params["query"])
+
+    image_queries = image_queries[:min(len(image_queries), 5)]
+    for query in image_queries:
+        searchTooling.function_names[function_name](query)
+
+    screenshot_dir = os.path.join(os.getcwd(), "screenshots")
+    screenshot_files = [
+        f for f in os.listdir(screenshot_dir)
+        if os.path.isfile(os.path.join(screenshot_dir, f))
+    ]
+
+    return screenshot_files
+
+
+def generate_website_theme(event_details: str, reference_images: List[str], image_dir: str = "screenshots") -> Dict[str, str]:
+    image_paths = [os.path.join(os.getcwd(), image_dir, image_name) for image_name in reference_images]
     images = [{"type": "image_url", "image_url": f"data:image/jpeg;base64,{_encode_image(path)}"} for path in image_paths]
 
     base_css = """
@@ -341,39 +393,40 @@ def generate_website_theme(event_details: str, image_dir: str = "./images", html
                     Format your response as follows:
 
                     [CSS]
-                    (Your CSS code here)
+                    (Your enhanced CSS code here, including the base CSS with your modifications)
                     [/CSS]
 
                     [HTML]
-                    (Your HTML structure here)
+                    (Your enhanced HTML structure here, based on the base HTML with your additions)
                     [/HTML]
-                    """
+
+                    [DESIGN_TOKENS]
+                    (Your design tokens here in JSON format, including color schemes, typography, spacing, and breakpoints)
+                    [/DESIGN_TOKENS]
+
+                    Ensure the design is visually appealing, modern, and aligns with the event's theme while maintaining usability and accessibility.""",
                 },
-                *images
-            ]
-        }
+                *images,
+            ],
+        },
     ]
 
-    response = client.chat.complete(
-        model=MODELS["image"],
-        messages=messages
-    )
-    response_content = response.choices[0].message.content
+    response = client.chat.complete(model=MODELS["image"], messages=messages)
+    response_content = response.choices[0].message.content.replace("```html", "").replace("```", "").replace("```css", "")
 
-    response_content = response.choices[0].message.content.replace("```html","").replace("```","").replace("```css","")
-
-    # Extract CSS and HTML
     css = re.search(r'\[CSS\](.*?)\[/CSS\]', response_content, re.DOTALL)
     html = re.search(r'\[HTML\](.*?)\[/HTML\]', response_content, re.DOTALL)
+    design_tokens = re.search(r'\[DESIGN_TOKENS\](.*?)\[/DESIGN_TOKENS\]', response_content, re.DOTALL)
     
     css = css.group(1).strip() if css else ""
     html = html.group(1).strip() if html else ""
+    design_tokens = json.loads(design_tokens.group(1).strip()) if design_tokens else {}
     
     return {
         "css": css,
         "html": html,
+        "design_tokens": design_tokens
     }
-
 def generate_pages(website_theme: Dict[str, str], event_details: str, asset_images: List[str], html_structure: List[str] = ["index.html","contact.html","register.html","about.html"]) -> List[Dict[str, str]]:
     pages = []
     for page in html_structure:
@@ -393,7 +446,7 @@ def generate_page_content(website_theme: Dict[str, str], page: str, event_detail
     - Use the provided CSS to style the page consistently with the overall theme.
     - Make sure all internal links use relative paths (e.g., './page_name.html').
 
-    Provide your response as a complete HTML file, including the DOCTYPE, html, head, and body tags. Embed the CSS directly in a style tag within the head. Do not include any other text, such as comments or additional tags.
+    Provide your response as a complete HTML file, including the DOCTYPE, html, head, and body tags. Embed the CSS directly in a style tag within the head.
     """
 
     messages = [
@@ -450,23 +503,86 @@ def refine_pages(pages: List[Dict[str, str]], website_theme: Dict[str, str]):
             })
 
     return refined_pages
+def generate_images(event_details: str, num_images: int = 5):
+    template_dir = os.path.join(os.path.dirname(__file__), "prompts")
+    env = Environment(loader=FileSystemLoader(template_dir))
+    template = env.get_template("get_event_images.xml.jinja")
+
+    rendered_content = template.render(event_details=event_details)
+
+    query_messages = [
+        {"role": "system", "content": "You are a creative web designer assistant."},
+        {"role": "user", "content": rendered_content},
+    ]
+    searchTooling = SearchTooling(prompt=event_details)
+    query_response = client.chat.complete(
+        model=MODELS["text"],
+        messages=query_messages,
+        tools=searchTooling.image_search_tool,
+        tool_choice="required",
+    )
+
+    tool_calls = query_response.choices[0].message.tool_calls
+    function_name = "search_web_pictures"
+    saved_images = []
+    
+    for i, call in enumerate(tool_calls[:num_images]):
+        function_params = json.loads(call.function.arguments)
+        searchTooling.function_names[function_name](**function_params)
+
+
+    return saved_images
 
 def generate_website(user_input: str) -> dict:
     try:
+        clear_directory('screenshots')
+        clear_directory('images')
         event_details = generate_event_details(user_input)
-        website_theme = generate_website_theme(event_details)
-        pages = generate_pages(website_theme, event_details, [])
-        # refined_pages = refine_pages(pages, website_theme)
-        refined_pages = pages
+        print("Step 1: Event details generated")
+        
+        reference_images = get_reference_images(user_input)[:3]
+        print("Step 2: Reference images retrieved")
+        
+        website_theme = generate_website_theme(event_details, reference_images=reference_images)
+        print("Step 3: Website theme generated")
+        
+        pages = generate_pages(website_theme, event_details, [])  # Pass an empty list for now
+        print("Step 4: Pages generated")
+        
+        refined_pages = pages # refine_pages(pages, website_theme)
+        print("Step 5: Pages refined")
+        
+        # Generate and save event-related images
+        event_images = generate_images(event_details)
+        print(f"Step 6: Event images generated and saved: {event_images}")
+        
+        # Update refined pages with the new event images
+        updated_refined_pages = update_pages_with_images(refined_pages, event_images)
+        print("Step 7: Pages updated with new images")
+        
         return {
             "theme": website_theme,
-            "pages": pages
+            "pages": updated_refined_pages
         }
     except Exception as e:
         return {
             "error": str(e),
             "traceback": traceback.format_exc()
         }
+
+def update_pages_with_images(pages: List[Dict[str, str]], images: List[str]) -> List[Dict[str, str]]:
+    updated_pages = []
+    for page in pages:
+        content = page['content']
+        for image in images:
+            # Replace placeholder images or add new images where appropriate
+            content = content.replace('images/placeholder.jpg', f'images/{image}', 1)
+        updated_pages.append({
+            "name": page['name'],
+            "content": content,
+            "notes": page.get('notes', '')
+        })
+    return updated_pages
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
