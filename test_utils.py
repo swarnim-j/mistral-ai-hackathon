@@ -142,11 +142,11 @@ def generate_page_content(website_theme: Dict[str, str], page: str, event_detail
     - Use the provided CSS to style the page consistently with the overall theme.
     - Make sure all internal links use relative paths (e.g., './page_name.html').
 
-    Provide your response as a complete HTML file, including the DOCTYPE, html, head, and body tags. Embed the CSS directly in a style tag within the head.
+    Provide your response as a complete HTML file, including the DOCTYPE, html, head, and body tags. Embed the CSS directly in a style tag within the head. Do not include any other text, such as comments or additional tags.
     """
 
     messages = [
-        {"role": "system", "content": "You are a skilled web developer creating a modern, responsive website."},
+        {"role": "system", "content": "You are a skilled web developer creating a modern, responsive website. Your response should only be the HTML code, with no other text or markup."},
         {"role": "user", "content": prompt}
     ]
 
@@ -156,6 +156,7 @@ def generate_page_content(website_theme: Dict[str, str], page: str, event_detail
     )
 
     return response.choices[0].message.content
+
 
 def generate_website(user_input: str) -> dict:
     try:
