@@ -6,23 +6,31 @@
 
 :root {
   --foreground-rgb: 255, 255, 255;
-  --background-rgb: 20, 20, 60;
+  --background-start: 40, 20, 60; /* Dark purple */
+  --background-end: 60, 50, 80; /* Slightly lighter purple with a hint of cream */
   --primary-color: #6366f1;
   --secondary-color: #8b5cf6;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
+  background: linear-gradient(
+    to bottom right,
+    rgb(var(--background-start)),
+    rgb(var(--background-end))
+  );
+  background-attachment: fixed;
   font-family: 'Inter', sans-serif;
+  min-height: 100vh;
 }
 
 .glass-morphism {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .gradient-text {
@@ -72,14 +80,18 @@ body {
   border-radius: 12px;
   padding: 1px;
   background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
 }
 
 .gradient-border::before {
   content: "";
   position: absolute;
   inset: 1px;
-  background: rgb(var(--background-rgb));
+  background: linear-gradient(
+    to bottom right,
+    rgb(var(--background-start)),
+    rgb(var(--background-end))
+  );
   border-radius: 11px;
   z-index: -1;
 }
@@ -92,4 +104,37 @@ body {
 
 .logo-hover:hover {
   transform: scale(1.05);
+}
+
+/* Add these styles at the end of the file */
+
+.footer-text {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+.footer-text:hover {
+  color: rgba(255, 255, 255, 1);
+  background: rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.footer-text .heart {
+  color: #ff4d4d;
+  display: inline-block;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }

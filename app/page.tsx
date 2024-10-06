@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Header from '../components/Header'
 import InputForm from '../components/InputForm'
 import WebsitePreview from '../components/WebsitePreview'
+import Footer from '../components/Footer'
 
 export default function Home() {
   const [generatedWebsite, setGeneratedWebsite] = useState<any>(null)
@@ -54,6 +55,7 @@ export default function Home() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   )
 }
