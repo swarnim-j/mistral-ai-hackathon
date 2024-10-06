@@ -59,68 +59,172 @@ def generate_website_theme(event_details: str, image_dir: str = "./images", html
     images = [{"type": "image_url", "image_url": f"data:image/jpeg;base64,{_encode_image(path)}"} for path in image_paths]
 
     base_css = """
-    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap');
 
     :root {
-        --primary-color: #4a90e2;
-        --secondary-color: #50e3c2;
-        --text-color: #333333;
-        --background-color: #f5f5f5;
+        --primary-color: #4a4af4;
+        --secondary-color: #8b8b8b;
+        --background-color: #0f172a;
+        --text-color: #e2e8f0;
+        --accent-color: #22d3ee;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
     }
 
     body {
-        font-family: 'Manrope', sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: var(--background-color);
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #0f172a, #1a2642);
         color: var(--text-color);
+        line-height: 1.6;
+        font-weight: 300;
     }
 
-    .header {
-        background-color: #ffffff;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        padding: 1rem 2rem;
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    header {
+        padding: 1.5rem 0;
+        background: linear-gradient(180deg, rgba(15,23,42,0.9) 0%, rgba(15,23,42,0) 100%);
+        position: fixed;
+        width: 100%;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+    }
+
+    nav {
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
 
-    .header nav a {
-        margin-left: 1rem;
-        text-decoration: none;
-        color: var(--text-color);
+    .logo {
+        font-size: 1.5rem;
         font-weight: 500;
+        color: var(--accent-color);
+        letter-spacing: 1px;
     }
 
-    .main-content {
-        max-width: 1200px;
-        margin: 2rem auto;
-        padding: 0 2rem;
+    .nav-links a {
+        color: var(--text-color);
+        text-decoration: none;
+        margin-left: 1.5rem;
+        font-weight: 300;
+        transition: all 0.3s ease;
+    }
+
+    .nav-links a:hover {
+        color: var(--accent-color);
+        transform: translateY(-2px);
     }
 
     .hero {
         text-align: center;
-        padding: 4rem 0;
+        padding: 10rem 0 6rem;
+        background: linear-gradient(135deg, rgba(74,74,244,0.1), rgba(34,211,238,0.1));
     }
 
-    .hero h1 {
-        font-size: 3rem;
+    h1 {
+        font-size: 4rem;
         margin-bottom: 1rem;
+        font-weight: 300;
+        background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -1px;
+    }
+
+    .subtitle {
+        font-size: 1.25rem;
+        color: var(--secondary-color);
+        margin-bottom: 2rem;
+        font-weight: 200;
     }
 
     .cta-button {
         display: inline-block;
-        background-color: var(--primary-color);
+        background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
         color: white;
-        padding: 0.75rem 1.5rem;
-        border-radius: 5px;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
         text-decoration: none;
         font-weight: 600;
-        transition: background-color 0.3s ease;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.9rem;
     }
 
     .cta-button:hover {
-        background-color: var(--secondary-color);
+        opacity: 0.9;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(74,74,244,0.3);
+    }
+
+    .section {
+        padding: 6rem 0;
+    }
+
+    h2 {
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+        text-align: center;
+        font-weight: 300;
+        color: var(--accent-color);
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+    }
+
+    .card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .card h3 {
+        font-weight: 500;
+        margin-bottom: 1rem;
+        color: var(--accent-color);
+    }
+
+    .card p {
+        font-weight: 300;
+    }
+
+    footer {
+        text-align: center;
+        padding: 2rem 0;
+        color: var(--secondary-color);
+        font-weight: 200;
+        background: linear-gradient(0deg, rgba(15,23,42,0.9) 0%, rgba(15,23,42,0) 100%);
+    }
+
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 3rem;
+        }
+        
+        .nav-links {
+            display: none;
+        }
     }
     """
 
@@ -130,28 +234,81 @@ def generate_website_theme(event_details: str, image_dir: str = "./images", html
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{event_name}</title>
-        <link rel="stylesheet" href="styles.css">
+        <title>Hack Cambridge 2024</title>
+        <link rel="stylesheet" href="base_css.css">
     </head>
     <body>
-        <header class="header">
-            <div class="logo">{event_name}</div>
-            <nav>
-                <a href="index.html">Home</a>
-                <a href="about.html">About</a>
-                <a href="schedules.html">Schedule</a>
-                <a href="register.html">Register</a>
-                <a href="contact.html">Register</a>
-            </nav>
+        <header>
+            <div class="container">
+                <nav>
+                    <div class="logo">Hack Cambridge</div>
+                    <div class="nav-links">
+                        <a href="#about">About</a>
+                        <a href="#tracks">Tracks</a>
+                        <a href="#sponsors">Sponsors</a>
+                        <a href="#faq">FAQ</a>
+                        <a href="#apply" class="cta-button">Apply Now</a>
+                    </div>
+                </nav>
+            </div>
         </header>
-        <main class="main-content">
+
+        <main>
             <section class="hero">
-                <h1>{event_headline}</h1>
-                <p>{event_description}</p>
-                <a href="#register" class="cta-button">Register Now</a>
+                <div class="container">
+                    <h1>Hack Cambridge 2024</h1>
+                    <p class="subtitle">Cambridge University's Premier Hackathon</p>
+                    <a href="#apply" class="cta-button">Join the Innovation</a>
+                </div>
             </section>
-            <!-- Additional sections to be generated dynamically -->
+
+            <section id="about" class="section">
+                <div class="container">
+                    <h2>About the Event</h2>
+                    <p>Hack Cambridge brings together the brightest minds in technology to solve real-world problems and push the boundaries of innovation. Join us for 24 hours of coding, creativity, and collaboration.</p>
+                </div>
+            </section>
+
+            <section id="tracks" class="section">
+                <div class="container">
+                    <h2>Hackathon Tracks</h2>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>AI & Machine Learning</h3>
+                            <p>Develop cutting-edge AI solutions to tackle complex challenges.</p>
+                        </div>
+                        <div class="card">
+                            <h3>FinTech Revolution</h3>
+                            <p>Innovate in the world of finance and create the future of banking.</p>
+                        </div>
+                        <div class="card">
+                            <h3>Sustainable Tech</h3>
+                            <p>Build technology that addresses environmental and social issues.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sponsors" class="section">
+                <div class="container">
+                    <h2>Our Sponsors</h2>
+                    <!-- Add sponsor logos or names here -->
+                </div>
+            </section>
+
+            <section id="faq" class="section">
+                <div class="container">
+                    <h2>Frequently Asked Questions</h2>
+                    <!-- Add FAQ items here -->
+                </div>
+            </section>
         </main>
+
+        <footer>
+            <div class="container">
+                <p>&copy; 2024 Hack Cambridge. All rights reserved.</p>
+            </div>
+        </footer>
     </body>
     </html>
     """
@@ -264,9 +421,11 @@ def refine_pages(pages: List[Dict[str, str]], website_theme: Dict[str, str]):
         css_theme=website_theme.get("css", "")
     )
     messages = [
-        {"role": "system", "content": "You are an expert web developer tasked with refining and improving web pages. For each file, provide the filename, content, and any additional notes or explanations. Use [FILE] to start a file section, [CONTENT] for the file content, and [NOTES] for any additional information."},
+        {"role": "system", "content": "You are an expert web developer tasked with refining and improving web pages. For each file, provide the filename, content, and any additional notes or explanations. Use [FILE] to start a file section, [CONTENT] for the file content, and [NOTES] for any additional information. For each file, provide your response as a complete HTML file, including the DOCTYPE, html, head, and body tags. Embed the CSS directly in a style tag within the head. Do not include any other text, such as comments or additional tags. Do not create any seperate CSS file, but embed the CSS directly in each HTML file."},
         {"role": "user", "content": rendered_content}
     ]
+
+    print(messages)
 
     response = client.chat.complete(
         model=MODELS["text"],
@@ -282,6 +441,7 @@ def refine_pages(pages: List[Dict[str, str]], website_theme: Dict[str, str]):
         if file_match:
             filename = file_match.group(1).strip()
             file_content = file_match.group(2).strip()
+            file_content = file_content.replace("```html","").replace("```css","").replace("```","")
             notes = file_match.group(3).strip()
             refined_pages.append({
                 "name": filename,
