@@ -45,7 +45,7 @@ export default function Home() {
           <h2 className="text-4xl font-bold mb-6 leading-tight">
             <span className="gradient-text">Elevate</span> Your Web <span className="gradient-text">Presence</span>
           </h2>
-          <p className="text-xl mb-8 text-gray-300">Create stunning websites with AI in seconds.</p>
+          <p className="text-xl mb-8 text-gray-300">Create stunning, relevant and functional websites with a single prompt in minutes.</p>
           <InputForm onSubmit={handleWebsiteGeneration} isLoading={isLoading} />
         </div>
         <div className="lg:w-2/3 flex-grow overflow-hidden">

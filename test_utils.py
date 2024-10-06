@@ -58,6 +58,102 @@ def generate_website_theme(event_details: str, image_dir: str = "./images", html
     image_paths = [f"{image_dir}/{image_name}" for image_name in reference_images]
     images = [{"type": "image_url", "image_url": f"data:image/jpeg;base64,{_encode_image(path)}"} for path in image_paths]
 
+    base_css = """
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap');
+
+    :root {
+        --primary-color: #4a90e2;
+        --secondary-color: #50e3c2;
+        --text-color: #333333;
+        --background-color: #f5f5f5;
+    }
+
+    body {
+        font-family: 'Manrope', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: var(--background-color);
+        color: var(--text-color);
+    }
+
+    .header {
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header nav a {
+        margin-left: 1rem;
+        text-decoration: none;
+        color: var(--text-color);
+        font-weight: 500;
+    }
+
+    .main-content {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 2rem;
+    }
+
+    .hero {
+        text-align: center;
+        padding: 4rem 0;
+    }
+
+    .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .cta-button {
+        display: inline-block;
+        background-color: var(--primary-color);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background-color 0.3s ease;
+    }
+
+    .cta-button:hover {
+        background-color: var(--secondary-color);
+    }
+    """
+
+    base_html = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{event_name}</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <header class="header">
+            <div class="logo">{event_name}</div>
+            <nav>
+                <a href="#about">About</a>
+                <a href="#schedule">Schedule</a>
+                <a href="#register">Register</a>
+            </nav>
+        </header>
+        <main class="main-content">
+            <section class="hero">
+                <h1>{event_headline}</h1>
+                <p>{event_description}</p>
+                <a href="#register" class="cta-button">Register Now</a>
+            </section>
+            <!-- Additional sections to be generated dynamically -->
+        </main>
+    </body>
+    </html>
+    """
+
     messages = [
         {
             "role": "system",
@@ -68,16 +164,20 @@ def generate_website_theme(event_details: str, image_dir: str = "./images", html
             "content": [
                 {
                     "type": "text",
-                    "text": f"""Generate a website theme based on these images and the following requirements: {event_details}
+                    "text": f"""Customize and enhance the following base CSS and HTML for this event: {event_details}
 
-                    Please provide:
-                    1. A CSS file with very modern, responsive design and cool web design features
-                    2. A basic HTML structure for the home page as well as a navbar which links to all of the other pages in {html_structure}
-                    3. DO not add ```css or ```html, format only as below
+                    Base CSS:
+                    {base_css}
 
-                    Ensure that the navbar actually links to the other pages, i.e. it has page_name.html as its href.
-                    Use relative paths for all links (e.g., './page_name.html').
-                    Ensure spectacular and modern design using latest web technologies and trends.
+                    Base HTML:
+                    {base_html}
+
+                    Instructions:
+                    1. Modify the color scheme to suit the event theme.
+                    2. Add additional CSS for creative layouts and modern design elements.
+                    3. Enhance the HTML structure with more sections relevant to the event.
+                    4. Incorporate subtle animations or transitions for interactive elements.
+                    5. Ensure the design is responsive and works well on all devices.
 
                     Format your response as follows:
 
