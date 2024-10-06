@@ -456,10 +456,11 @@ def generate_website(user_input: str) -> dict:
         event_details = generate_event_details(user_input)
         website_theme = generate_website_theme(event_details)
         pages = generate_pages(website_theme, event_details, [])
-        refined_pages = refine_pages(pages, website_theme)
+        # refined_pages = refine_pages(pages, website_theme)
+        refined_pages = pages
         return {
             "theme": website_theme,
-            "pages": refined_pages
+            "pages": pages
         }
     except Exception as e:
         return {
