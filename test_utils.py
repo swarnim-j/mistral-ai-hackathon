@@ -377,7 +377,7 @@ def generate_website(user_input: str) -> dict:
         event_details = generate_event_details(user_input)
         print("Step 1: Event details generated")
         
-        reference_images = get_reference_images(user_input)[:8]
+        reference_images = get_reference_images(user_input)[:3]
         print("Step 2: Reference images retrieved")
         
         website_theme = generate_website_theme(event_details, reference_images=reference_images)

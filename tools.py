@@ -171,6 +171,7 @@ class SearchTooling:
             return f"Error: {response.status_code} - {response.text}"
 
     def filter_images(self, image_path: str, prompt: str) -> bool:
+        return True
         template_dir = os.path.join(os.path.dirname(__file__), "prompts")
         env = Environment(loader=FileSystemLoader(template_dir))
         template = env.get_template("filter_images_by_condition.xml.jinja")
@@ -202,8 +203,9 @@ class SearchTooling:
                 model=MODELS["image"], messages=messages, max_tokens=100
             )
             response_content = response.choices[0].message.content
+            time.sleep(1)
             return "SUITABLE" in response_content.upper()
-
+            # Sleep for 1 second
         except Exception as e:
             print(f"Error in filter_images: {e}")
             return False
